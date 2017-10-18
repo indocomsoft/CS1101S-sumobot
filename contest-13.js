@@ -12,7 +12,6 @@ var timeStep = 50; // in ms; used in runForTime()
 // Threshold to determine if a motor running at maxSpeed is pushing something
 var pushingThreshold = maxSpeed * 0.65;
 
-<<<<<<< HEAD
 // ---- Miscellaneous functions ----
 function abs(val){
     return val < 0 ? -val : val;
@@ -26,7 +25,40 @@ var rightMotorRunning = 0;
 // ---- End of state variables ----
 
 // ---- Status check functions ----
-function getColor
+// Return value 0 to 5, the higher the return value, the higher the chance of
+// getting kicked out of the arena
+function getColor() {
+    var color = "undefined";
+    var code = -1;
+    var r = ev3.colorSensorRed(ev3.colorSensor());
+    var g = ev3.colorSensorGreen(ev3.colorSensor());
+    var b = ev3.colorSensorBlue(ev3.colorSensor());
+    if (r <= 200) {
+        if (b <= 120) {
+            color = "green";
+            code = 3;
+        } else if (b <= 200) {
+            color = "deep blue";
+            code = 1;
+        } else {
+            color = "turqoise";
+            code = 2;
+        }
+    } else if (r <= 350) {
+        if (b <= 100) {
+            color = "red";
+            code = 5;
+        } else {
+            color = "purple";
+            code = 0;
+        }
+    } else {
+        color = "yellow";
+        code = 4;
+    }
+    source.alert("return "+ code + ", color:" + color + "("+r+","+g+","+b+")");
+    return code;
+}
 
 function leftPushing(){
     if(leftMotorRunning !== 0){
@@ -124,39 +156,3 @@ while(true){
     // Execute the state
     nextState();
 }
-=======
-// Return value 0 to 5, the higher the return value, the higher the chance of
-// getting kicked out of the arena
-function getColor() {
-    var color = "undefined";
-    var code = -1;
-    var r = ev3.colorSensorRed(ev3.colorSensor());
-    var g = ev3.colorSensorGreen(ev3.colorSensor());
-    var b = ev3.colorSensorBlue(ev3.colorSensor());
-    if (r <= 200) {
-        if (b <= 120) {
-            color = "green";
-            code = 3;
-        } else if (b <= 200) {
-            color = "deep blue";
-            code = 1;
-        } else {
-            color = "turqoise";
-            code = 2;
-        }
-    } else if (r <= 350) {
-        if (b <= 100) {
-            color = "red";
-            code = 5;
-        } else {
-            color = "purple";
-            code = 0;
-        }
-    } else {
-        color = "yellow";
-        code = 4;
-    }
-    source.alert("return "+ code + ", color:" + color + "("+r+","+g+","+b+")");
-    return code;
-}
->>>>>>> 0d37617658b3ac1b3560df66a010f8e6d636a7db
