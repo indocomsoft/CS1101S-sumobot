@@ -12,7 +12,7 @@ function motorTest(){
 motorTest();
 ev3.motorStart(leftMotor);
 ev3.motorStart(rightMotor);
-for(var i = 0; i < 5 < i++){
+for(var i = 0; i < 5; i++){
     currSpeed += 50;
     motorTest();
     ev3.pause(500);
