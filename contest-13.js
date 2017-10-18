@@ -4,14 +4,8 @@ var source = require('./node_modules/ev3source/source.js');
 
 
 
-var color = "undefined";
-ev3.runForTime(ev3.motorB(), 10000, 50);
-ev3.runForTime(ev3.motorC(), 10000, 50);
-
-
-function recurring() {
-    ev3.runForTime(ev3.motorB(), 10000, 50);
-    ev3.runForTime(ev3.motorC(), 10000, 50);
+function getColor() {
+    var color = "undefined";
     var r = ev3.colorSensorRed(ev3.colorSensor());
     var g = ev3.colorSensorGreen(ev3.colorSensor());
     var b = ev3.colorSensorBlue(ev3.colorSensor());
@@ -32,9 +26,6 @@ function recurring() {
     } else {
         color = "yellow";
     }
-    ev3.speak("Fucking " + color);
     source.alert(color + "("+r+","+g+","+b+")");
-    ev3.pause(1000);
+    return color;
 }
-
-ev3.runForever(recurring);
