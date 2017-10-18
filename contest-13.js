@@ -2,39 +2,124 @@
 var ev3 = require('./node_modules/ev3source/ev3.js');
 var source = require('./node_modules/ev3source/source.js');
 
+// Needs calibration
+var leftMotor = ev3.motorB();
+var rightMotor = ev3.motorC();
+var eyes = ev3.ultrasonicSensor();
+var gyro = ev3.gyroSensor();
+var maxSpeed = 600;
+var timeStep = 50; // in ms; used in runForTime()
+// Threshold to determine if a motor running at maxSpeed is pushing something
+var pushingThreshold = maxSpeed * 0.65;
 
+// ---- Miscellaneous functions ----
+function abs(val){
+    return val < 0 ? -val : val;
+}
+// ---- End of miscellaneous functions ----
+//
+// ---- State variables ----
+var nextState = init_state;
+var leftMotorStatus = [0, 0];
+var rightMotorRunning = 0;
+// ---- End of state variables ----
 
-var color = "undefined";
-ev3.runForTime(ev3.motorB(), 10000, 50);
-ev3.runForTime(ev3.motorC(), 10000, 50);
+// ---- Status check functions ----
+function getColor
 
-
-function recurring() {
-    ev3.runForTime(ev3.motorB(), 10000, 50);
-    ev3.runForTime(ev3.motorC(), 10000, 50);
-    var r = ev3.colorSensorRed(ev3.colorSensor());
-    var g = ev3.colorSensorGreen(ev3.colorSensor());
-    var b = ev3.colorSensorBlue(ev3.colorSensor());
-    if (r <= 200) {
-        if (b <= 120) {
-            color = "green";
-        } else if (b <= 200) {
-            color = "deep blue";
-        } else {
-            color = "turqoise";
-        }
-    } else if (r <= 350) {
-        if (b <= 100) {
-            color = "red";
-        } else {
-            color = "purple";
-        }
-    } else {
-        color = "yellow";
+function leftPushing(){
+    if(leftMotorRunning !== 0){
+        return abs(ev3.motorGetSpeed(leftMotor)) < pushingThreshold;
+    } else{
+        return ev3.motorGetSpeed(leftMotor) !== 0;
     }
-    ev3.speak("Fucking " + color);
-    source.alert(color + "("+r+","+g+","+b+")");
-    ev3.pause(1000);
 }
 
-ev3.runForever(recurring);
+function updateStats(){
+
+}
+
+// ---- End of status check functions ----
+
+
+
+// ---- States ----
+function search(){
+    if(prevState !== "search"){
+        prevState = "search";
+    } else{ /* Do nothing */}
+    // Just rotate
+    ev3.runForTime(leftMotor, timeStep, maxSpeed);
+    ev3.runForTime(rightMotor, timeStep, -maxSpeed);
+    if(enemyAhead()){
+        nextState = attackFront;
+    } else if(inDangerZone()){
+        nextState = escape;
+    }
+}
+function attackFront(){
+    ev3.runForTime(leftMotor, timeStep, maxSpeed);
+    ev3.runForTime(rightMotor, timeStep, maxSpeed);
+
+    if(prevState !== "attackFront"){
+        prevState = "attackFront";
+    } else{ /* Do nothing */}
+
+    // --- Transition code ---
+    if(inDangerZone()){
+        // Killed an enemy? Or sensed someone's leg; anyway, about to move out
+        // of arena. Escape.
+        nextState = escape;
+    } else if(!enemyAhead()){
+        // Lost the enemy? Chase again
+        nextState = search;
+    } else { /* Do nothing, continue attacking */}
+}
+
+function attackRear(){
+    ev3.runForTime(leftMotor, timeStep, -maxSpeed);
+    ev3.runForTime(rightMotor, timeStep, -maxSpeed);
+    if(prevState !== "attackRear"){
+        prevState = "attackRear";
+    } else{ /* Do nothing */}
+    if(inDangerZone()){
+        nextState = escape;
+    } else if(!pushing()){
+        nextState = search;
+    } else{ /* Do nothing. Continue attacking. */}
+}
+
+function escape(){
+    // Just asked to escape? Stop moving first
+    if(prevState !== "escape"){
+        ev3.motorSetStopAction(leftMotor, "hold");
+        ev3.motorSetStopAction(rightMotor, "hold");
+        ev3.stop(leftMotor);
+        ev3.stop(rightMotor);
+        prevState = "escape";
+        // Move in opposite direction of previous move
+    } else{ /* Do nothing */ }
+
+    moveInEscapeDirection();
+
+    // --- Transition code ---
+    if(!inDangerZone()){
+        nextState = search;
+    } else{ /* Do nothing, continue escaping */ }
+}
+
+// Initial state after button press.
+function init_state(){
+
+}
+// ---- End of states ----
+
+
+// The main event loop for the finite state machine
+
+// ev3.waitForButtonPress();
+while(true){
+    updateStats();
+    // Execute the state
+    nextState();
+}
