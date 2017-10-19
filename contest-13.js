@@ -2,6 +2,10 @@
 var ev3 = require('./node_modules/ev3source/ev3.js');
 var source = require('./node_modules/ev3source/source.js');
 
+// !!!!! CHANGE TO FALSE!!!!
+var debug = false;
+// !!!!! IMPORTANT ^
+
 // Needs calibration
 var maxSpeed = 1000;
 var timeStep = 50; // in ms; used in runForTime()
@@ -12,7 +16,9 @@ var pushingThreshold = maxSpeed * 0.65;
 // Threshold to determine what value of getColor() is regarded as dangerous
 var dangerThreshold = 4;
 // Threshold to determine max distance of object to be recognised as an enemy
-var eyesThreshold = 50; // in cm
+var eyesThreshold = 40; // in cm
+// Threshold to determine when to start turning in the other direction during search
+var searchStopThreshold = 0.2; // as a fraction of maxSpeed
 
 // Sensors and Motor objects
 var leftMotor = ev3.motorB();
@@ -28,12 +34,37 @@ function abs(val){
     return val < 0 ? -val : val;
 }
 */
+function not(direction) {
+    return direction === "left" ? "right" : "left";
+}
+
+function turn(direction, time) {
+    if (direction === "left") {
+        ev3.runForTime(leftMotor, time, -maxSpeed);
+        ev3.runForTime(rightMotor, time, maxSpeed);
+    } else {
+        ev3.runForTime(leftMotor, time, maxSpeed);
+        ev3.runForTime(rightMotor, time, -maxSpeed);
+    } 
+}
+
+function escapeturn(direction, time) {
+    if (direction === "left") {
+        ev3.runForTime(leftMotor, time, -maxSpeed);
+        ev3.runForTime(rightMotor, time, 0.5 * maxSpeed);
+    } else {
+        ev3.runForTime(leftMotor, time, 0.5 * maxSpeed);
+        ev3.runForTime(rightMotor, time, -maxSpeed);
+    } 
+}
+
 // ---- End of miscellaneous functions ----
 //
 // ---- State variables ----
 var nextState = init_state;
-var leftMotorStatus = [0, 0];
-var rightMotorRunning = 0;
+var lastSearch = undefined;
+var leftMotorLast = undefined;
+var rightMotorLast = undefined;
 // ---- End of state variables ----
 
 // ---- Status check functions ----
@@ -74,20 +105,18 @@ function getColor() {
 }
 
 function inDangerZone() {
-    return getColor() >= dangerThreshold;
+    if (debug) return false;
+    else return getColor() >= dangerThreshold;
 }
 
-function leftPushing(){
-    if(leftMotorRunning !== 0){
-        return Math.abs(ev3.motorGetSpeed(leftMotor)) < pushingThreshold;
-    } else{
-        return ev3.motorGetSpeed(leftMotor) !== 0;
-    }
-}
+// function leftPushing(){
+//     if(leftMotorRunning !== 0){
+//         return Math.abs(ev3.motorGetSpeed(leftMotor)) < pushingThreshold;
+//     } else{
+//         return ev3.motorGetSpeed(leftMotor) !== 0;
+//     }
+// }
 
-function pushing() {
-
-}
 
 function enemyAhead() {
     return ev3.ultrasonicSensorDistance(eyes) <= eyesThreshold;
@@ -103,21 +132,36 @@ function updateStats(){
 
 // ---- States ----
 function search(){
+    source.alert("search");
+    var firstTime = false;
     if(prevState !== "search"){
         prevState = "search";
+        firstTime = true;
     } else{ /* Do nothing */}
-    // Just rotate
-    ev3.runForTime(leftMotor, timeStep, maxSpeed);
-    ev3.runForTime(rightMotor, timeStep, -maxSpeed);
+    // Rotate if motor is not already running
+    if (Math.abs(ev3.motorGetSpeed(leftMotor)) < searchStopThreshold * maxSpeed) {
+        if (firstTime) {
+            // First call of search
+            turn(lastSearch, time90deg);
+            firstTime = false;
+        } else {
+            // search calling search, meaning sweep in one direction has failed
+            lastSearch = not(lastSearch);
+            turn(lastSearch, time90deg * 4);
+        }
+    }
     if(enemyAhead()){
         nextState = attackFront;
     } else if(inDangerZone()){
         nextState = escape;
     }
 }
+
 function attackFront(){
-    ev3.runForTime(leftMotor, timeStep, maxSpeed);
-    ev3.runForTime(rightMotor, timeStep, maxSpeed);
+    source.alert("attackFront");
+    // Run for 500ms for smooth ride
+    ev3.runForTime(leftMotor, 500, maxSpeed);
+    ev3.runForTime(rightMotor, 500, maxSpeed);
 
     if(prevState !== "attackFront"){
         prevState = "attackFront";
@@ -134,20 +178,24 @@ function attackFront(){
     } else { /* Do nothing, continue attacking */}
 }
 
-function attackRear(){
-    ev3.runForTime(leftMotor, timeStep, -maxSpeed);
-    ev3.runForTime(rightMotor, timeStep, -maxSpeed);
-    if(prevState !== "attackRear"){
-        prevState = "attackRear";
-    } else{ /* Do nothing */}
-    if(inDangerZone()){
-        nextState = escape;
-    } else if(!pushing()){
-        nextState = search;
-    } else{ /* Do nothing. Continue attacking. */}
-}
+
+// function attackRear(){
+//     source.alert("attackRear");
+//     prevAttackMode = "attackRear";
+//     ev3.runForTime(leftMotor, timeStep, -maxSpeed);
+//     ev3.runForTime(rightMotor, timeStep, -maxSpeed);
+//     if(prevState !== "attackRear"){
+//         prevState = "attackRear";
+//     } else{ /* Do nothing */}
+//     if(inDangerZone()){
+//         nextState = escape;
+//     } else if(!pushing()){
+//         nextState = search;
+//     } else{ /* Do nothing. Continue attacking. */}
+// }
 
 function escape(){
+    source.alert("escape");
     // Just asked to escape? Stop moving first
     if(prevState !== "escape"){
         ev3.motorSetStopAction(leftMotor, "hold");
@@ -155,22 +203,30 @@ function escape(){
         ev3.motorStop(leftMotor);
         ev3.motorStop(rightMotor);
         prevState = "escape";
-        // Move in opposite direction of previous move
     } else{ /* Do nothing */ }
 
-    moveInEscapeDirection();
+    // Rotate
+    escapeturn(lastSearch, time90deg);
+    // ev3.runForTime(leftMotor, 500, -maxSpeed);
+    // ev3.runForTime(rightMotor, 500, -maxSpeed);
+        
 
     // --- Transition code ---
-    if(!inDangerZone()){
+    if(getColor() <= dangerThreshold - 1){
+        lastSearch = not(lastSearch);
         nextState = search;
         ev3.motorStop(leftMotor);
         ev3.motorStop(rightMotor);
-    } else{ /* Do nothing, continue escaping */ }
+    } else{ source.alert(getColor());/* Do nothing, continue escaping */ }
 }
 
 // Initial state after button press.
 function init_state(){
+    // Always hold the ground
+    ev3.motorSetStopAction(leftMotor, "hold");
+    ev3.motorSetStopAction(rightMotor, "hold");
     // Very general scenario: directly search
+    lastSearch = "left";
     prevState = "search";
     nextState = search;
     /*
