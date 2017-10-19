@@ -3,16 +3,21 @@ var ev3 = require('./node_modules/ev3source/ev3.js');
 var source = require('./node_modules/ev3source/source.js');
 
 // Needs calibration
-var leftMotor = ev3.motorB();
-var rightMotor = ev3.motorC();
-var eyes = ev3.ultrasonicSensor();
-var gyro = ev3.gyroSensor();
 var maxSpeed = 600;
 var timeStep = 50; // in ms; used in runForTime()
 // Threshold to determine if a motor running at maxSpeed is pushing something
 var pushingThreshold = maxSpeed * 0.65;
 // Threshold to determine what value of getColor() is regarded as dangerous
 var dangerThreshold = 4;
+// Threshold to determine max distance of object to be recognised as an enemy
+var eyesThreshold = 50; // in cm
+
+// Sensors and Motor objects
+var leftMotor = ev3.motorB();
+var rightMotor = ev3.motorC();
+var eyes = ev3.ultrasonicSensor();
+var gyro = ev3.gyroSensor();
+var colorSensor = ev3.colorSensor();
 
 // ---- Miscellaneous functions ----
 // abs not required as Math object is available in node.js
@@ -35,9 +40,10 @@ var rightMotorRunning = 0;
 function getColor() {
     var color = "undefined";
     var code = -1;
-    var r = ev3.colorSensorRed(ev3.colorSensor());
-    var g = ev3.colorSensorGreen(ev3.colorSensor());
-    var b = ev3.colorSensorBlue(ev3.colorSensor());
+
+    var r = ev3.colorSensorRed(colorSensor);
+    var g = ev3.colorSensorGreen(colorSensor);
+    var b = ev3.colorSensorBlue(colorSensor);
     if (r <= 200) {
         if (b <= 120) {
             color = "green";
@@ -61,7 +67,7 @@ function getColor() {
         color = "yellow";
         code = 4;
     }
-    source.alert("return "+ code + ", color:" + color + "("+r+","+g+","+b+")");
+    // source.alert("return "+ code + ", color:" + color + "("+r+","+g+","+b+")");
     return code;
 }
 
@@ -75,6 +81,14 @@ function leftPushing(){
     } else{
         return ev3.motorGetSpeed(leftMotor) !== 0;
     }
+}
+
+function pushing() {
+
+}
+
+function enemyAhead() {
+    return ev3.ultrasonicSensorDistance(eyes) <= eyesThreshold;
 }
 
 function updateStats(){
