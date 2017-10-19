@@ -66,7 +66,7 @@ function getColor() {
 }
 
 function inDangerZone() {
-    return getColor() > dangerThreshold;
+    return getColor() >= dangerThreshold;
 }
 
 function leftPushing(){
