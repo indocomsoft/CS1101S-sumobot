@@ -11,11 +11,16 @@ var maxSpeed = 600;
 var timeStep = 50; // in ms; used in runForTime()
 // Threshold to determine if a motor running at maxSpeed is pushing something
 var pushingThreshold = maxSpeed * 0.65;
+// Threshold to determine what value of getColor() is regarded as dangerous
+var dangerThreshold = 4;
 
 // ---- Miscellaneous functions ----
+// abs not required as Math object is available in node.js
+/*
 function abs(val){
     return val < 0 ? -val : val;
 }
+*/
 // ---- End of miscellaneous functions ----
 //
 // ---- State variables ----
@@ -60,9 +65,13 @@ function getColor() {
     return code;
 }
 
+function inDangerZone() {
+    return getColor() > dangerThreshold;
+}
+
 function leftPushing(){
     if(leftMotorRunning !== 0){
-        return abs(ev3.motorGetSpeed(leftMotor)) < pushingThreshold;
+        return Math.abs(ev3.motorGetSpeed(leftMotor)) < pushingThreshold;
     } else{
         return ev3.motorGetSpeed(leftMotor) !== 0;
     }
