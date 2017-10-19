@@ -12,7 +12,7 @@ var pushingThreshold = maxSpeed * 0.65;
 // Threshold to determine what value of getColor() is regarded as dangerous
 var dangerThreshold = 4;
 // Threshold to determine max distance of object to be recognised as an enemy
-var eyesThreshold = 40; // in cm
+var eyesThreshold = 35; // in cm
 // Threshold to determine when to start turning in the other direction during search
 var searchStopThreshold = 0.2; // as a fraction of maxSpeed
 
@@ -194,7 +194,7 @@ function escape(){
         
 
     // --- Transition code ---
-    if(getColor() <= dangerThreshold - 2){
+    if(getColor() <= dangerThreshold - 1){
         if (goingBackward) {
             ev3.motorStop(leftMotor);
             ev3.motorStop(rightMotor);

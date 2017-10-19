@@ -210,14 +210,12 @@ function escape(){
     }
 }
 
-function turnAround() {
-    if (prevState !== "turnAround") {
-        prevState = "turnAround";
-        turn(lastSearch, time90deg * 2);
-    }
-    if (Math.abs(ev3.motorGetSpeed(leftMotor)) < searchStopThreshold * maxSpeed) {
-        nextState = attackFront;
-    }
+function forward() {
+    ev3.runForTime(leftMotor, 1000, maxSpeed);
+    ev3.runForTime(rightMotor, 1000, maxSpeed);
+    if (getColor() < 3) {
+        nextState = search;
+    } else { }
 }
 
 // Initial state after button press.
@@ -226,14 +224,14 @@ function init_state(){
     ev3.motorSetStopAction(leftMotor, "hold");
     ev3.motorSetStopAction(rightMotor, "hold");
     // Very general scenario: directly search
-    // lastSearch = "left";
-    // prevState = "search";
-    // nextState = search;
-
+    lastSearch = "right";
+    nextState = forward;
+    prevState = undefined;
+    /*
     // Scenario 1: head-on →←
-    lastSearch = "left";
-    nextState = turnAround;
-
+    prevState = "attackFront";
+    nextState = attackFront;
+    */
     
     /*
     // Scenario 2: parallel and facing same direction ↑↑
