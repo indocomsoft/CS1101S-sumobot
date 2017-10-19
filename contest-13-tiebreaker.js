@@ -34,6 +34,8 @@ function skidRight() {
     }
 }
 
+source.alert("Ready");
+ev3.waitForButtonPress();
 while(true) {
     nextState();
 }
