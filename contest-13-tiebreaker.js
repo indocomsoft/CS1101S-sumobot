@@ -13,29 +13,26 @@ var eyeThreshold = 15;
 // Sensors and Motor objects
 var leftMotor = ev3.motorB();
 var rightMotor = ev3.motorC();
-var eyes = ev3.ultrasonicSensor();
-var nextState = skidLeft;
 
-function skidLeft() {
-    if (ev3.ultrasonicSensorDistance(eyes) <= eyeThreshold) {
-        nextState = skidRight;
-    } else {
-        ev3.runForTime(leftMotor, time, -0.5 * maxSpeed);
-        ev3.runForTime(rightMotor, time, maxSpeed);
-    }
-}
+ev3.runForTime(leftMotor, 4000, maxSpeed);
+ev3.runForTime(rightMotor, 4000, maxSpeed);
+ev3.pause(4000);
+ev3.runForTime(leftMotor, 3300, -maxSpeed);
+ev3.runForTime(rightMotor, 3300, maxSpeed);
+ev3.pause(3300);
 
-function skidRight() {
-    if (ev3.ultrasonicSensorDistance(eyes) > eyeThreshold) {
-        nextState = skidLeft;
-    } else {
-        ev3.runForTime(leftMotor, time, maxSpeed);
-        ev3.runForTime(rightMotor, time, -0.5 * maxSpeed);
-    }
-}
-
-source.alert("Ready");
-ev3.waitForButtonPress();
+//ev3.waitForButtonPress();
 while(true) {
-    nextState();
+    ev3.runForTime(leftMotor, 6000, maxSpeed);
+    ev3.runForTime(rightMotor, 6000, maxSpeed);
+    ev3.pause(6000);
+    ev3.runForTime(leftMotor, 3300, -maxSpeed);
+    ev3.runForTime(rightMotor, 3300, maxSpeed);
+    ev3.pause(3300);
+    ev3.runForTime(leftMotor, 9000, maxSpeed);
+    ev3.runForTime(rightMotor, 9000, maxSpeed);
+    ev3.pause(9000);
+    ev3.runForTime(leftMotor, 3300, -maxSpeed);
+    ev3.runForTime(rightMotor, 3300, maxSpeed);
+    ev3.pause(3300);
 }

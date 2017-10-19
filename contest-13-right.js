@@ -10,7 +10,7 @@ var time90deg = 3500;
 // Threshold to determine if a motor running at maxSpeed is pushing something
 var pushingThreshold = maxSpeed * 0.65;
 // Threshold to determine what value of getColor() is regarded as dangerous
-var dangerThreshold = 4;
+var dangerThreshold = 5;
 // Threshold to determine max distance of object to be recognised as an enemy
 var eyesThreshold = 35; // in cm
 // Threshold to determine when to start turning in the other direction during search
