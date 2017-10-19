@@ -7,7 +7,7 @@ var debug = false;
 // !!!!! IMPORTANT ^
 
 // Needs calibration
-var maxSpeed = 1000;
+var maxSpeed = 800;
 var timeStep = 50; // in ms; used in runForTime()
 // Time required to turn 90 degrees
 var time90deg = 3500;
@@ -65,6 +65,9 @@ var nextState = init_state;
 var lastSearch = undefined;
 var leftMotorLast = undefined;
 var rightMotorLast = undefined;
+var firstTime = undefined;
+var secondTime = undefined;
+var goingBackward = undefined;
 // ---- End of state variables ----
 
 // ---- Status check functions ----
@@ -131,25 +134,43 @@ function updateStats(){
 
 
 // ---- States ----
-function search(){
-    source.alert("search");
-    var firstTime = false;
-    if(prevState !== "search"){
-        prevState = "search";
+function searchAttack() {
+    source.alert("searchAttack");
+    if (prevState !== "searchAttack") {
+        prevState = "searchAttack";
         firstTime = true;
-    } else{ /* Do nothing */}
+    } else { }
     // Rotate if motor is not already running
     if (Math.abs(ev3.motorGetSpeed(leftMotor)) < searchStopThreshold * maxSpeed) {
         if (firstTime) {
             // First call of search
-            turn(lastSearch, time90deg);
+            turn(lastSearch, 1100);
             firstTime = false;
-        } else {
-            // search calling search, meaning sweep in one direction has failed
+            secondTime = true;
+        } else if (secondTime) {
+            // Second call of search
             lastSearch = not(lastSearch);
-            turn(lastSearch, time90deg * 4);
+            turn(lastSearch, 2200);
+            secondTime = false;
+        } else {
+            nextState = search;
         }
     }
+    if(enemyAhead()){
+        nextState = attackFront;
+    } else if(inDangerZone()){
+        nextState = escape;
+    }
+}
+
+function search(){
+    source.alert("search");
+    if(prevState !== "search"){
+        prevState = "search";
+    } else{ /* Do nothing */}
+    // Rotate if motor is not already running
+    turn(lastSearch, time90deg * 4);
+
     if(enemyAhead()){
         nextState = attackFront;
     } else if(inDangerZone()){
@@ -174,7 +195,7 @@ function attackFront(){
         nextState = escape;
     } else if(!enemyAhead()){
         // Lost the enemy? Chase again
-        nextState = search;
+        nextState = searchAttack;
     } else { /* Do nothing, continue attacking */}
 }
 
@@ -203,21 +224,35 @@ function escape(){
         ev3.motorStop(leftMotor);
         ev3.motorStop(rightMotor);
         prevState = "escape";
+        goingBackward = true;
+        source.alert("Going backwards");
     } else{ /* Do nothing */ }
-
-    // Rotate
-    escapeturn(lastSearch, time90deg);
+        
+    if (goingBackward) {
+        ev3.runForTime(leftMotor, 1000, -maxSpeed);
+        ev3.runForTime(rightMotor, 1000, -maxSpeed);
+    }
     // ev3.runForTime(leftMotor, 500, -maxSpeed);
     // ev3.runForTime(rightMotor, 500, -maxSpeed);
         
 
     // --- Transition code ---
-    if(getColor() <= dangerThreshold - 1){
-        lastSearch = not(lastSearch);
-        nextState = search;
-        ev3.motorStop(leftMotor);
-        ev3.motorStop(rightMotor);
-    } else{ source.alert(getColor());/* Do nothing, continue escaping */ }
+    if(getColor() <= dangerThreshold - 2){
+        if (goingBackward) {
+            source.alert("Safe lateral distance now, rotating...");
+            ev3.motorStop(leftMotor);
+            ev3.motorStop(rightMotor);
+            goingBackward = false;
+            turn(lastSearch, time90deg);
+        } else {
+            source.alert("Safe orientation reached");
+            ev3.motorStop(leftMotor);
+            ev3.motorStop(rightMotor);
+            nextState = search;
+        }
+    } else {
+        turn(lastSearch, time90deg);
+    }
 }
 
 // Initial state after button press.
@@ -248,8 +283,8 @@ function init_state(){
 
 
 // The main event loop for the finite state machine
-
-// ev3.waitForButtonPress();
+source.alert("Ready");
+ev3.waitForButtonPress();
 while(true){
     updateStats();
     // Execute the state
