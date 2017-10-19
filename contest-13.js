@@ -3,8 +3,10 @@ var ev3 = require('./node_modules/ev3source/ev3.js');
 var source = require('./node_modules/ev3source/source.js');
 
 // Needs calibration
-var maxSpeed = 600;
+var maxSpeed = 1000;
 var timeStep = 50; // in ms; used in runForTime()
+// Time required to turn 90 degrees
+var time90deg = 3500;
 // Threshold to determine if a motor running at maxSpeed is pushing something
 var pushingThreshold = maxSpeed * 0.65;
 // Threshold to determine what value of getColor() is regarded as dangerous
