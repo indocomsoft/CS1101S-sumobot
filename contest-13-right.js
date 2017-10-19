@@ -96,7 +96,7 @@ function getColor() {
 }
 
 function inDangerZone() {
-    else return getColor() >= dangerThreshold;
+    return getColor() >= dangerThreshold;
 }
 
 function enemyAhead() {
