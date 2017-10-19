@@ -38,7 +38,7 @@ var rightMotorRunning = 0;
 // Return value 0 to 5, the higher the return value, the higher the chance of
 // getting kicked out of the arena
 function getColor() {
-    var color = "undefined";
+    //var color = "undefined";
     var code = -1;
 
     var r = ev3.colorSensorRed(colorSensor);
@@ -46,25 +46,25 @@ function getColor() {
     var b = ev3.colorSensorBlue(colorSensor);
     if (r <= 200) {
         if (b <= 120) {
-            color = "green";
+            //color = "green";
             code = 3;
         } else if (b <= 200) {
-            color = "deep blue";
+            //color = "deep blue";
             code = 1;
         } else {
-            color = "turqoise";
+            //color = "turqoise";
             code = 2;
         }
     } else if (r <= 350) {
         if (b <= 100) {
-            color = "red";
+            //color = "red";
             code = 5;
         } else {
-            color = "purple";
+            //color = "purple";
             code = 0;
         }
     } else {
-        color = "yellow";
+        //color = "yellow";
         code = 4;
     }
     // source.alert("return "+ code + ", color:" + color + "("+r+","+g+","+b+")");
