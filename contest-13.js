@@ -136,8 +136,8 @@ function escape(){
     if(prevState !== "escape"){
         ev3.motorSetStopAction(leftMotor, "hold");
         ev3.motorSetStopAction(rightMotor, "hold");
-        ev3.stop(leftMotor);
-        ev3.stop(rightMotor);
+        ev3.motorStop(leftMotor);
+        ev3.motorStop(rightMotor);
         prevState = "escape";
         // Move in opposite direction of previous move
     } else{ /* Do nothing */ }
