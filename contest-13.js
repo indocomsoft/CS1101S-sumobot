@@ -168,7 +168,23 @@ function escape(){
 
 // Initial state after button press.
 function init_state(){
+    // Very general scenario: directly search
+    prevState = "search";
+    nextState = search;
+    /*
+    // Scenario 1: head-on →←
+    prevState = "attackFront";
+    nextState = attackFront;
+    */
+    
+    /*
+    // Scenario 2: parallel and facing same direction ↑↑
 
+    */
+
+    /*
+    // Scenario 3: facing away from each other ←→
+    */
 }
 // ---- End of states ----
 
