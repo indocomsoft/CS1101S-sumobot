@@ -6,7 +6,7 @@ var source = require('./node_modules/ev3source/source.js');
 var maxSpeed = 800;
 var timeStep = 50; // in ms; used in runForTime()
 // Time required to turn 90 degrees
-var time90deg = 3500;
+var time90deg = 3300;
 // Threshold to determine if a motor running at maxSpeed is pushing something
 var pushingThreshold = maxSpeed * 0.65;
 // Threshold to determine what value of getColor() is regarded as dangerous
@@ -216,8 +216,16 @@ function turnAround() {
         turn(lastSearch, time90deg * 2);
     }
     if (Math.abs(ev3.motorGetSpeed(leftMotor)) < searchStopThreshold * maxSpeed) {
-        nextState = attackFront;
+        nextState = forward;
     }
+}
+
+function forward() {
+    ev3.runForTime(leftMotor, 1000, maxSpeed);
+    ev3.runForTime(rightMotor, 1000, maxSpeed);
+    if (getColor() < 3) {
+        nextState = attackFront;
+    } else { }
 }
 
 // Initial state after button press.
@@ -232,6 +240,7 @@ function init_state(){
 
     // Scenario 1: head-on →←
     lastSearch = "right";
+    prevState = undefined;
     nextState = turnAround;
 
     
