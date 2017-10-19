@@ -161,6 +161,8 @@ function escape(){
     // --- Transition code ---
     if(!inDangerZone()){
         nextState = search;
+        ev3.motorStop(leftMotor);
+        ev3.motorStop(rightMotor);
     } else{ /* Do nothing, continue escaping */ }
 }
 
