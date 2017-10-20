@@ -12,7 +12,7 @@ var pushingThreshold = maxSpeed * 0.65;
 // Threshold to determine what value of getColor() is regarded as dangerous
 var dangerThreshold = 5;
 // Threshold to determine max distance of object to be recognised as an enemy
-var eyesThreshold = 40; // in cm
+var eyesThreshold = 50; // in cm
 // Threshold to determine when to start turning in the other direction during search
 var searchStopThreshold = 0.2; // as a fraction of maxSpeed
 
